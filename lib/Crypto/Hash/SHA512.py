@@ -37,6 +37,9 @@ _raw_sha512_lib = load_pycryptodome_raw_lib("Crypto.Hash._SHA512",
                         int SHA512_digest(const void *shaState,
                                           uint8_t *digest,
                                           size_t digest_size);
+                        int SHA512_undigest(const void *shaState,
+                                            uint8_t *digest,
+                                            size_t digest_size);
                         int SHA512_copy(const void *src, void *dst);
 
                         int SHA512_pbkdf2_hmac_assist(const void *inner,
@@ -158,7 +161,8 @@ class SHA512Hash(object):
         return SHA512Hash(data, self._truncate)
 
 
-def new(data=None, truncate=None):
+def new(data=None, truncate=None,
+        undigest=None):
     """Create a new hash object.
 
     Args:
@@ -170,11 +174,26 @@ def new(data=None, truncate=None):
         "256". If not present, the digest is 512 bits long.
         Passing this parameter is **not** equivalent to simply truncating
         the output digest.
+      undigest (bytes):
+        A hashed output state to 'restart' the hash from. If an argument is 
+        passed, the hash object's internal state is initialised to the value
+        inferred from the hash that is passed in.
 
     :Return: A :class:`SHA512Hash` hash object
     """
 
-    return SHA512Hash(data, truncate)
+    if undigest is None:
+        return SHA512Hash(data, truncate)
+    
+    hasher = SHA512Hash(None, None)
+    print(hasher._state.get())
+    result = _raw_sha512_lib.SHA512_undigest(hasher._state.get(),
+                                               create_string_buffer(hasher.digest_size),
+                                               c_size_t(hasher.digest_size))
+    if result:
+        raise ValueError("Error %d while undigesting to SHA-512"
+                         % result)
+    return hasher
 
 
 # The size of the full SHA-512 hash in bytes.
