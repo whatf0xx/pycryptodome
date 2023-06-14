@@ -38,8 +38,7 @@ _raw_sha512_lib = load_pycryptodome_raw_lib("Crypto.Hash._SHA512",
                                           uint8_t *digest,
                                           size_t digest_size);
                         int SHA512_undigest(const void *shaState,
-                                            uint8_t *digest,
-                                            size_t digest_size);
+                                            const uint8_t *buf);
                         int SHA512_copy(const void *src, void *dst);
 
                         int SHA512_pbkdf2_hmac_assist(const void *inner,
@@ -184,12 +183,14 @@ def new(data=None, truncate=None,
 
     if undigest is None:
         return SHA512Hash(data, truncate)
-    
+
     hasher = SHA512Hash(None, None)
-    print(hasher._state.get())
+    assert len(undigest) == 64,\
+        f"Expected a 512-bit hash, got {len(undigest) * 8} bits."
+
     result = _raw_sha512_lib.SHA512_undigest(hasher._state.get(),
-                                               create_string_buffer(hasher.digest_size),
-                                               c_size_t(hasher.digest_size))
+                                               c_uint8_ptr(undigest))
+    print(result)
     if result:
         raise ValueError("Error %d while undigesting to SHA-512"
                          % result)

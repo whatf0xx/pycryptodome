@@ -438,21 +438,9 @@ EXPORT_SYM int FUNC_NAME(_digest)(const hash_state *shaState, uint8_t *digest, s
     return 0;
 }
 
-EXPORT_SYM int FUNC_NAME(_undigest)(const hash_state *shaState, uint8_t *digest, size_t digest_size)
+EXPORT_SYM int FUNC_NAME(_undigest)(const hash_state *shaState, const uint8_t *buf)
 {
-    hash_state temp;
-
-    if (NULL == shaState) {
-        return ERR_NULL;
-    }
-
-    if (digest_size != shaState->digest_size) {
-        return ERR_DIGEST_SIZE;
-    }
-
-    temp = *shaState;
-    sha_finalize(&temp, digest, digest_size);
-    return 0;
+    return buf[1];
 }
 
 EXPORT_SYM int FUNC_NAME(_copy)(const hash_state *src, hash_state *dst)
