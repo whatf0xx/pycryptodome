@@ -190,10 +190,11 @@ def new(data=None, truncate=None,
 
     result = _raw_sha512_lib.SHA512_undigest(hasher._state.get(),
                                                c_uint8_ptr(undigest))
-    print(result)
+
     if result:
         raise ValueError("Error %d while undigesting to SHA-512"
                          % result)
+    
     return hasher
 
 
