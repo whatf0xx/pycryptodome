@@ -440,7 +440,7 @@ EXPORT_SYM int FUNC_NAME(_digest)(const hash_state *shaState, uint8_t *digest, s
 
 EXPORT_SYM int FUNC_NAME(_undigest)(const hash_state *shaState, const uint8_t *buf)
 {
-    return 0;
+    return 1;
 }
 
 EXPORT_SYM int FUNC_NAME(_copy)(const hash_state *src, hash_state *dst)

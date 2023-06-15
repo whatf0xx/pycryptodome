@@ -63,3 +63,5 @@ coverage.xml
 # PyBuilder
 target/
 
+# JetBrains
+.idea/
