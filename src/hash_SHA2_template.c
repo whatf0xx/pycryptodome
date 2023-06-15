@@ -32,6 +32,10 @@
 #include <stdio.h>
 #include "common.h"
 #include "endianess.h"
+/**
+ * Added the below to make VS Code happy, delete this later.
+*/
+#include <stdint.h>
 
 FAKE_INIT(MODULE_NAME)
 
@@ -146,6 +150,18 @@ static inline void put_be(sha2_word_t number, uint8_t *p)
     for (i=0; i<WORD_SIZE; i++) {
         p[WORD_SIZE-1-i] = (uint8_t)(number >> (i*8));
     }
+}
+
+static inline sha2_word_t unput_be(uint8_t *p)
+{
+    int i;
+    sha2_word_t number;
+
+    for(i=0; i<WORD_SIZE; i++) {
+        number = number | (sha2_word_t) (p[i] << (i*8));
+    }
+
+    return number;
 }
 
 typedef struct t_hash_state {
@@ -435,12 +451,59 @@ EXPORT_SYM int FUNC_NAME(_digest)(const hash_state *shaState, uint8_t *digest, s
 
     temp = *shaState;
     sha_finalize(&temp, digest, digest_size);
+
+    printf("The digest: 0x");
+    for(int i=0; i<64; i++){printf("%02x ", digest[i]);}
+
+    printf("\n---INTERNAL HASH STATE AT END OF DIGEST:---\n");
+    printf("temp.h: 0x");
+    for(int i=0; i<8; i++){
+        uint8_t t[8];
+        put_be(temp.h[i], t);
+        for(int j=0; j<8; j++){printf("%02x",  t[j]);}
+    }
+    printf("\nshaState->h: 0x");
+    for(int i=0; i<8; i++){
+        uint8_t t[8];
+        put_be(shaState->h[i], t);
+        for(int j=0; j<8; j++){printf("%02x",  t[j]);}
+    }
+    printf("\nbuf: 0x");
+    for(int i = 0; i<BLOCK_SIZE; i++){
+        if(i % 16 == 0 && i > 1){printf("\n\t   ");}
+        printf("%02x ", shaState->buf[i]);
+    }
+    printf("\ncurlen: %d\n", shaState->curlen);
+    printf("totbits: %d %d\n", shaState->totbits[0], shaState->totbits[1]);
+    printf("digest_size: %d\n", shaState->digest_size);
+    printf("-------------------------------------------\n");
     return 0;
 }
 
-EXPORT_SYM int FUNC_NAME(_undigest)(const hash_state *shaState, const uint8_t *buf)
+EXPORT_SYM int FUNC_NAME(_undigest)(hash_state *shaState, const uint8_t *buf)
 {
-    return 1;
+    printf("Made it to this function call!");
+    for(int i = 0; i<64; i++){
+        shaState->h[i] = unput_be(buf[i*8]); 
+    }
+    printf("---INTERNAL HASH STATE AT END OF UNDIGEST:---\n");
+    printf("\nshaState->h: 0x");
+    for(int i=0; i<8; i++){
+        uint8_t t[8];
+        put_be(shaState->h[i], t);
+        for(int j=0; j<8; j++){printf("%02x",  t[j]);}
+    }
+    printf("\nbuf: 0x");
+    for(int i = 0; i<BLOCK_SIZE; i++){
+        if(i % 16 == 0 && i > 1){printf("\n\t   ");}
+        printf("%02x ", shaState->buf[i]);
+    }
+    printf("\ncurlen: %d\n", shaState->curlen);
+    printf("totbits: %d %d\n", shaState->totbits[0], shaState->totbits[1]);
+    printf("digest_size: %d\n", shaState->digest_size);
+    printf("-------------------------------------------\n");
+    return 0;
+    
 }
 
 EXPORT_SYM int FUNC_NAME(_copy)(const hash_state *src, hash_state *dst)
