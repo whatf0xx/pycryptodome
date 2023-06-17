@@ -24,7 +24,7 @@ from Crypto.Util._raw_api import (load_pycryptodome_raw_lib,
                                   VoidPointer, SmartPointer,
                                   create_string_buffer,
                                   get_raw_buffer, c_size_t,
-                                  c_uint8_ptr)
+                                  c_ulong, c_uint8_ptr)
 
 _raw_sha512_lib = load_pycryptodome_raw_lib("Crypto.Hash._SHA512",
                         """
@@ -38,7 +38,12 @@ _raw_sha512_lib = load_pycryptodome_raw_lib("Crypto.Hash._SHA512",
                                           uint8_t *digest,
                                           size_t digest_size);
                         int SHA512_undigest(const void *shaState,
-                                            const uint8_t *buf);
+                                            const uint8_t *buf,
+                                            long curlen,
+                                            long tb0,
+                                            long tb1,
+                                            long tb2,
+                                            long tb3);
                         int SHA512_copy(const void *src, void *dst);
 
                         int SHA512_pbkdf2_hmac_assist(const void *inner,
@@ -161,7 +166,7 @@ class SHA512Hash(object):
 
 
 def new(data=None, truncate=None,
-        undigest=None):
+        undigest=None, length=None):
     """Create a new hash object.
 
     Args:
@@ -177,6 +182,8 @@ def new(data=None, truncate=None,
         A hashed output state to 'restart' the hash from. If an argument is 
         passed, the hash object's internal state is initialised to the value
         inferred from the hash that is passed in.
+      length (int):
+        the length of message, in bytes, that the undigested hash should start from.
 
     :Return: A :class:`SHA512Hash` hash object
     """
@@ -187,9 +194,19 @@ def new(data=None, truncate=None,
     hasher = SHA512Hash(None, None)
     assert len(undigest) == 64,\
         f"Expected a 512-bit hash, got {len(undigest) * 8} bits."
+    
+    if length is None:
+        raise TypeError("You must also provide a length for the undigest to be meaningful.")
+    totbits = (length // 128) * 8
+    curlen = (length % 128)  # TODO: the problem is here, the curlen should be post-padding
 
     result = _raw_sha512_lib.SHA512_undigest(hasher._state.get(),
-                                               c_uint8_ptr(undigest))
+                                               c_uint8_ptr(undigest),
+                                               c_ulong(curlen),
+                                               c_ulong(totbits >> 0),
+                                               c_ulong(totbits >> 16),
+                                               c_ulong(totbits >> 32),
+                                               c_ulong(totbits >> 48))
 
     if result:
         raise ValueError("Error %d while undigesting to SHA-512"

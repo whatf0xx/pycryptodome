@@ -18,6 +18,7 @@ class SHA512Hash(object):
 
 def new(data: Optional[Buffer] = ...,
         truncate: Optional[str] = ...,
-        undigest: Optional[Buffer] = ...) -> SHA512Hash: ...
+        undigest: Optional[Buffer] = ...,
+        length: Optional[int] = ...) -> SHA512Hash: ...
 digest_size: int
 block_size: int

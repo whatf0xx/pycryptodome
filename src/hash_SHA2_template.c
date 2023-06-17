@@ -152,13 +152,22 @@ static inline void put_be(sha2_word_t number, uint8_t *p)
     }
 }
 
+static inline void print_sha2_word(sha2_word_t word)
+{
+    uint8_t temp[WORD_SIZE];
+    put_be(word, temp);
+    for(int i=0; i<WORD_SIZE; i++)
+    {
+        printf("%02x", temp[i]);
+    }
+}
+
 static inline sha2_word_t unput_be(uint8_t *p)
 {
-    int i;
-    sha2_word_t number;
+    sha2_word_t number = 0;
 
-    for(i=0; i<WORD_SIZE; i++) {
-        number = number | (sha2_word_t) (p[i] << (i*8));
+    for(int i=0; i<WORD_SIZE; i++) {
+        number = number | (((sha2_word_t) p[WORD_SIZE-1-i]) << (i*8));
     }
 
     return number;
@@ -452,9 +461,6 @@ EXPORT_SYM int FUNC_NAME(_digest)(const hash_state *shaState, uint8_t *digest, s
     temp = *shaState;
     sha_finalize(&temp, digest, digest_size);
 
-    printf("The digest: 0x");
-    for(int i=0; i<64; i++){printf("%02x ", digest[i]);}
-
     printf("\n---INTERNAL HASH STATE AT END OF DIGEST:---\n");
     printf("temp.h: 0x");
     for(int i=0; i<8; i++){
@@ -468,42 +474,53 @@ EXPORT_SYM int FUNC_NAME(_digest)(const hash_state *shaState, uint8_t *digest, s
         put_be(shaState->h[i], t);
         for(int j=0; j<8; j++){printf("%02x",  t[j]);}
     }
-    printf("\nbuf: 0x");
-    for(int i = 0; i<BLOCK_SIZE; i++){
-        if(i % 16 == 0 && i > 1){printf("\n\t   ");}
-        printf("%02x ", shaState->buf[i]);
-    }
+    // printf("\nbuf: 0x");
+    // for(int i = 0; i<BLOCK_SIZE; i++){
+    //     if(i % 16 == 0 && i > 1){printf("\n\t   ");}
+    //     printf("%02x ", shaState->buf[i]);
+    // }
     printf("\ncurlen: %d\n", shaState->curlen);
-    printf("totbits: %d %d\n", shaState->totbits[0], shaState->totbits[1]);
-    printf("digest_size: %d\n", shaState->digest_size);
-    printf("-------------------------------------------\n");
+    printf("totbits: %ld %ld\n", shaState->totbits[0], shaState->totbits[1]);
+    // printf("digest_size: %d\n", shaState->digest_size);
+    printf("\n-------------------------------------------\n\n");
     return 0;
 }
 
-EXPORT_SYM int FUNC_NAME(_undigest)(hash_state *shaState, const uint8_t *buf)
+EXPORT_SYM int FUNC_NAME(_undigest)(hash_state *shaState, const uint8_t *buf,
+                                    long curlen, long tb0, long tb1,
+                                    long tb2, long tb3)
 {
-    printf("Made it to this function call!");
-    for(int i = 0; i<64; i++){
-        shaState->h[i] = unput_be(buf[i*8]); 
+    // printf("Made it to this function call!\n");
+    // printf("Here is buf[0]: %02x\n", buf[0]);
+    for(int i = 0; i<8; i++){
+        shaState->h[i] = unput_be(&buf[i*8]);
+        // printf("Set h[%d] to be: 0x", i);
+        // print_sha2_word(shaState->h[i]);
+        // printf("\n");
     }
-    printf("---INTERNAL HASH STATE AT END OF UNDIGEST:---\n");
-    printf("\nshaState->h: 0x");
-    for(int i=0; i<8; i++){
-        uint8_t t[8];
-        put_be(shaState->h[i], t);
-        for(int j=0; j<8; j++){printf("%02x",  t[j]);}
-    }
-    printf("\nbuf: 0x");
-    for(int i = 0; i<BLOCK_SIZE; i++){
-        if(i % 16 == 0 && i > 1){printf("\n\t   ");}
-        printf("%02x ", shaState->buf[i]);
-    }
-    printf("\ncurlen: %d\n", shaState->curlen);
-    printf("totbits: %d %d\n", shaState->totbits[0], shaState->totbits[1]);
-    printf("digest_size: %d\n", shaState->digest_size);
-    printf("-------------------------------------------\n");
-    return 0;
-    
+    shaState->curlen = curlen;
+    shaState->totbits[0] = (sha2_word_t) tb0 | ((sha2_word_t) tb1 << 16);
+    shaState->totbits[1] = (sha2_word_t) tb2 | ((sha2_word_t) tb3 << 16);
+    printf("Updated curlen to %d\n", shaState->curlen);
+    printf("Updated totbits[0] to %ld\n", shaState->totbits[0]);
+    printf("Updated totbits[1] to %ld\n", shaState->totbits[1]);
+    // printf("---INTERNAL HASH STATE AT END OF UNDIGEST:---\n");
+    // printf("shaState->h: 0x");
+    // for(int i=0; i<8; i++){
+    //     uint8_t t[8];
+    //     put_be(shaState->h[i], t);
+    //     for(int j=0; j<8; j++){printf("%02x",  t[j]);}
+    // }
+    // printf("\nbuf: 0x");
+    // for(int i = 0; i<BLOCK_SIZE; i++){
+    //     if(i % 16 == 0 && i > 1){printf("\n\t   ");}
+    //     printf("%02x ", shaState->buf[i]);
+    // }
+    // printf("\ncurlen: %d\n", shaState->curlen);
+    // printf("totbits: %d %d\n", shaState->totbits[0], shaState->totbits[1]);
+    // printf("digest_size: %d\n", shaState->digest_size);
+    // printf("\n-------------------------------------------\n\n");
+    return 0; 
 }
 
 EXPORT_SYM int FUNC_NAME(_copy)(const hash_state *src, hash_state *dst)
