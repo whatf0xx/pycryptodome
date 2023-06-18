@@ -39,7 +39,6 @@ _raw_sha512_lib = load_pycryptodome_raw_lib("Crypto.Hash._SHA512",
                                           size_t digest_size);
                         int SHA512_undigest(const void *shaState,
                                             const uint8_t *buf,
-                                            long curlen,
                                             long tb0,
                                             long tb1,
                                             long tb2,
@@ -199,10 +198,10 @@ def new(data=None, truncate=None,
         raise TypeError("You must also provide a length for the undigest to be meaningful.")
     totbits = (length // 128) * 8
     curlen = (length % 128)  # TODO: the problem is here, the curlen should be post-padding
+    totbits += 128 * 8 if curlen <= 119 else 128 * 8 * 2
 
     result = _raw_sha512_lib.SHA512_undigest(hasher._state.get(),
                                                c_uint8_ptr(undigest),
-                                               c_ulong(curlen),
                                                c_ulong(totbits >> 0),
                                                c_ulong(totbits >> 16),
                                                c_ulong(totbits >> 32),

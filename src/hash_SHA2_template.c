@@ -487,7 +487,7 @@ EXPORT_SYM int FUNC_NAME(_digest)(const hash_state *shaState, uint8_t *digest, s
 }
 
 EXPORT_SYM int FUNC_NAME(_undigest)(hash_state *shaState, const uint8_t *buf,
-                                    long curlen, long tb0, long tb1,
+                                    long tb0, long tb1,
                                     long tb2, long tb3)
 {
     // printf("Made it to this function call!\n");
@@ -498,7 +498,7 @@ EXPORT_SYM int FUNC_NAME(_undigest)(hash_state *shaState, const uint8_t *buf,
         // print_sha2_word(shaState->h[i]);
         // printf("\n");
     }
-    shaState->curlen = curlen;
+    shaState->curlen = 0;
     shaState->totbits[0] = (sha2_word_t) tb0 | ((sha2_word_t) tb1 << 16);
     shaState->totbits[1] = (sha2_word_t) tb2 | ((sha2_word_t) tb3 << 16);
     printf("Updated curlen to %d\n", shaState->curlen);
