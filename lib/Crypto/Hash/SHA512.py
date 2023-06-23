@@ -239,3 +239,13 @@ def _pbkdf2_hmac_assist(inner, outer, first_digest, iterations):
         raise ValueError("Error %d with PBKDF2-HMAC assist for SHA512" % result)
 
     return get_raw_buffer(bfr)
+
+# Function provided for posterity
+from Crypto.Util.number import long_to_bytes
+def calculate_sha512_padding(msg_len: int) -> bytes:
+    long_len = long_to_bytes(msg_len * 8)  # length in bits
+    repr_uint64 = b'\x00' * (8-len(long_len)) + long_len
+    assert len(repr_uint64) == 8
+    if (msg_len % 128) + 9 > 128:
+        return b"\x80" + b"\x00" * (119 - (msg_len % 128)) + repr_uint64
+    return b"\x80" + b"\x00" * (119 - (msg_len % 128)) + repr_uint64
