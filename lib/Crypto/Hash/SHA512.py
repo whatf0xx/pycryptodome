@@ -197,7 +197,7 @@ def new(data=None, truncate=None,
     if length is None:
         raise TypeError("You must also provide a length for the undigest to be meaningful.")
     totbits = (length // 128) * 8
-    curlen = (length % 128)  # TODO: the problem is here, the curlen should be post-padding
+    curlen = (length % 128)
     totbits += 128 * 8 if curlen <= 119 else 128 * 8 * 2
 
     result = _raw_sha512_lib.SHA512_undigest(hasher._state.get(),
