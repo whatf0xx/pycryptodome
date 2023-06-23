@@ -468,6 +468,15 @@ EXPORT_SYM int FUNC_NAME(_undigest)(hash_state *shaState, const uint8_t *buf,
     shaState->totbits[0] = (sha2_word_t) tb0 | ((sha2_word_t) tb1 << 16);
     shaState->totbits[1] = (sha2_word_t) tb2 | ((sha2_word_t) tb3 << 16);
     
+    printf("\n----------FINAL UNDIGESTED STATE----------\n");
+    printf("shaState->h: ");
+    for(int i=0; i<8; i++){
+        uint8_t t[8];
+        put_be(shaState->h[i], t);
+        for(int j=0; j<8; j++){printf("%02x",  t[j]);}
+    }
+    printf("\nshaState->totbits[0]: %d", shaState->totbits[0]);
+    printf("\nshaState->totbits[1]: %d\n\n", shaState->totbits[1]);
     return 0; 
 }
 
