@@ -182,7 +182,7 @@ def new(data=None, truncate=None,
         passed, the hash object's internal state is initialised to the value
         inferred from the hash that is passed in.
       length (int):
-        the length of message, in bytes, that the undigested hash should start from.
+        the length of message, in bytes, of the message that was previously hashed.
 
     :Return: A :class:`SHA512Hash` hash object
     """
